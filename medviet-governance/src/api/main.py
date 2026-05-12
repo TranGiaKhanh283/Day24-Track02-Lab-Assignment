@@ -15,11 +15,15 @@ async def get_raw_patients(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    TODO: Trả về raw patient data (chỉ admin được phép).
+    Trả về raw patient data (chỉ admin được phép).
     Load từ data/raw/patients_raw.csv
     Trả về 10 records đầu tiên dưới dạng JSON.
     """
-    pass
+    try:
+        df = pd.read_csv("data/raw/patients_raw.csv")
+        return df.head(10).to_dict(orient="records")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- ENDPOINT 2 ---
 @app.get("/api/patients/anonymized")
@@ -28,10 +32,15 @@ async def get_anonymized_patients(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    TODO: Trả về anonymized data (ml_engineer và admin được phép).
+    Trả về anonymized data (ml_engineer và admin được phép).
     Load raw data → anonymize → trả về JSON.
     """
-    pass
+    try:
+        df = pd.read_csv("data/raw/patients_raw.csv")
+        df_anon = anonymizer.anonymize_dataframe(df.head(20)) # Anonymize 20 records for demo
+        return df_anon.to_dict(orient="records")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- ENDPOINT 3 ---
 @app.get("/api/metrics/aggregated")
@@ -40,10 +49,15 @@ async def get_aggregated_metrics(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    TODO: Trả về aggregated metrics (data_analyst, ml_engineer, admin).
+    Trả về aggregated metrics (data_analyst, ml_engineer, admin).
     Ví dụ: số bệnh nhân theo từng loại bệnh (không có PII).
     """
-    pass
+    try:
+        df = pd.read_csv("data/raw/patients_raw.csv")
+        metrics = df["benh"].value_counts().to_dict()
+        return {"patient_count_by_condition": metrics}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- ENDPOINT 4 ---
 @app.delete("/api/patients/{patient_id}")
@@ -53,9 +67,10 @@ async def delete_patient(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    TODO: Chỉ admin được xóa. Các role khác nhận 403.
+    Chỉ admin được xóa. Các role khác nhận 403.
     """
-    pass
+    return {"message": f"Patient {patient_id} deleted successfully (mock)"}
+
 
 @app.get("/health")
 async def health():
